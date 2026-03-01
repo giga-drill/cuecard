@@ -35,8 +35,14 @@ python3 -m http.server 4173
 
 Then open `http://localhost:<port>/`.
 
-## Deployment Notes
+## Build & Deploy
 
-- The site is optimized for static hosting (GitHub Pages, Netlify, Vercel, Cloudflare Pages, etc.)
+```bash
+npm run build
+rsync -avz --delete _site/ do:/var/www/cuecard/
+```
+
+## Notes
+
 - Update `site.webmanifest` and favicons in `assets/` when branding changes
 - Remember to keep privacy/terms copies in sync with legal docs used inside the desktop app
