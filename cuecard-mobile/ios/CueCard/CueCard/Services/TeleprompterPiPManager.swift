@@ -39,6 +39,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     private var playbackTimer: Timer?
     private var playbackTimerStartDate: Date?
     private var elapsedTimeAtPlaybackStart: Double = 0
+    private var needsContentViewUpdate = false
 
     // MARK: - Callbacks
 
@@ -79,7 +80,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         self.currentWordIndex = currentWordIndex
         self.countdownValue = countdownValue
         self.isCountingDown = isCountingDown
-        updateContentView()
+        needsContentViewUpdate = true
     }
 
     /// Start PiP mode
@@ -149,7 +150,9 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
                 guard let self = self, self.isPlaying, let startDate = self.playbackTimerStartDate else { return }
                 self.elapsedTime = self.elapsedTimeAtPlaybackStart + Date().timeIntervalSince(startDate)
                 self.updateCurrentWordIndex()
-                self.updateContentView()
+                // Don't call updateContentView() here — the displayLink handles rendering.
+                // Calling from both causes double updates and animation stacking.
+                self.needsContentViewUpdate = true
             }
         }
     }
@@ -316,6 +319,8 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     }
 
     @objc private func updateDisplay() {
+        guard needsContentViewUpdate else { return }
+        needsContentViewUpdate = false
         updateContentView()
     }
 
@@ -541,7 +546,8 @@ private class TeleprompterPiPContentView: UIView {
         let contentId = text
         let progressBucket = (highlightProgress * 10).rounded(.down) / 10
         let needsFullRebuild = lastContentId != contentId
-        let needsHighlightUpdate = lastWordIndex != currentWordIndex || lastProgressBucket != progressBucket
+        let needsHighlightUpdate = lastProgressBucket != progressBucket
+        let needsScroll = lastWordIndex != currentWordIndex
 
         if needsFullRebuild || needsHighlightUpdate {
             let savedOffset = textView.contentOffset
@@ -560,11 +566,13 @@ private class TeleprompterPiPContentView: UIView {
             }
 
             lastContentId = contentId
-            lastWordIndex = currentWordIndex
             lastProgressBucket = progressBucket
         }
 
-        if currentWordIndex > 0 {
+        // Only scroll when the word index actually changes, not every frame.
+        // This prevents stacking dozens of competing 0.55s animations per second.
+        if needsScroll && currentWordIndex > 0 {
+            lastWordIndex = currentWordIndex
             let wordRanges = getWordRanges(from: text)
             if currentWordIndex < wordRanges.count {
                 let range = wordRanges[currentWordIndex]
@@ -575,7 +583,7 @@ private class TeleprompterPiPContentView: UIView {
                 let maxY = textView.contentSize.height - textView.bounds.height
                 let scrollY = max(0, min(targetY, maxY))
 
-                UIView.animate(withDuration: 0.55, delay: 0, options: [.curveEaseInOut, .allowUserInteraction]) {
+                UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseOut, .beginFromCurrentState]) {
                     self.textView.contentOffset = CGPoint(x: 0, y: scrollY)
                 }
             }
