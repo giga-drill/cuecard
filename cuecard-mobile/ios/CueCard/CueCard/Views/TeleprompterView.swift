@@ -316,6 +316,9 @@ struct TeleprompterView: View {
             countdownValue: countdownValue,
             isCountingDown: isCountingDown
         )
+        // Stop the view's timer — PiP manager has its own playback timer.
+        // Running both causes dual writes to pipManager state and doubles CPU work.
+        stopTimer()
         pipManager.startPiP(minimizeApp: minimizeApp)
         Analytics.logEvent("teleprompter_pip_started", parameters: nil)
     }
