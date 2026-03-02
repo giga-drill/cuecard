@@ -15,6 +15,8 @@ struct TeleprompterView: View {
     @State private var scrollOffset: CGFloat = 0
     @State private var elapsedTime: Double = 0
     @State private var timer: Timer?
+    @State private var timerStartDate: Date?
+    @State private var elapsedTimeAtTimerStart: Double = 0
     @State private var contentHeight: CGFloat = 0
     @State private var viewHeight: CGFloat = 0
     @State private var showControls = true
@@ -412,6 +414,11 @@ struct TeleprompterView: View {
         let wordsToSkip = Int(10 * wordsPerSecond)
         currentWordIndex = min(currentWordIndex + wordsToSkip, content.words.count - 1)
         elapsedTime = Double(currentWordIndex) / wordsPerSecond
+        // Reset wall-clock anchor so the timer continues from the new position
+        if timerStartDate != nil {
+            timerStartDate = Date()
+            elapsedTimeAtTimerStart = elapsedTime
+        }
         pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, currentWordIndex: currentWordIndex)
     }
 
@@ -421,6 +428,11 @@ struct TeleprompterView: View {
         let wordsToSkip = Int(10 * wordsPerSecond)
         currentWordIndex = max(currentWordIndex - wordsToSkip, 0)
         elapsedTime = Double(currentWordIndex) / wordsPerSecond
+        // Reset wall-clock anchor so the timer continues from the new position
+        if timerStartDate != nil {
+            timerStartDate = Date()
+            elapsedTimeAtTimerStart = elapsedTime
+        }
         pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, currentWordIndex: currentWordIndex)
     }
 
@@ -440,13 +452,16 @@ struct TeleprompterView: View {
         // Prevent multiple timers from running simultaneously
         stopTimer()
 
-        // Timer interval based on WPM setting
-        let wordsPerSecond = Double(settings.wordsPerMinute) / 60.0
+        // Track wall-clock start time to avoid drift from accumulated intervals
+        timerStartDate = Date()
+        elapsedTimeAtTimerStart = elapsedTime
+
         let interval = 1.0 / 30.0
 
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
             Task { @MainActor in
-                elapsedTime += interval
+                guard let startDate = timerStartDate else { return }
+                elapsedTime = elapsedTimeAtTimerStart + Date().timeIntervalSince(startDate)
                 updateCurrentWord()
             }
         }
@@ -455,6 +470,7 @@ struct TeleprompterView: View {
     private func stopTimer() {
         timer?.invalidate()
         timer = nil
+        timerStartDate = nil  // Prevents stale Task blocks from writing elapsedTime
     }
 
     private func updateCurrentWord() {

@@ -103,6 +103,9 @@ fun TeleprompterScreen(
     var isPlaying by remember { mutableStateOf(false) }
     var elapsedTime by remember { mutableDoubleStateOf(0.0) }
     var currentWordIndex by remember { mutableIntStateOf(0) }
+    // Shared timer anchor - seek updates these so the timer loop continues from the new position
+    val timerStartNanos = remember { longArrayOf(0L) }
+    val elapsedTimeAtStart = remember { doubleArrayOf(0.0) }
     var showControls by remember { mutableStateOf(true) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
     var countdownValue by remember { mutableIntStateOf(0) }
@@ -173,9 +176,11 @@ fun TeleprompterScreen(
     // Timer loop
     LaunchedEffect(isPlaying) {
         if (isPlaying) {
+            timerStartNanos[0] = System.nanoTime()
+            elapsedTimeAtStart[0] = elapsedTime
             while (isPlaying) {
                 delay(33) // ~30 FPS
-                elapsedTime += 0.033
+                elapsedTime = elapsedTimeAtStart[0] + (System.nanoTime() - timerStartNanos[0]) / 1_000_000_000.0
 
                 // Update current word index
                 val wordsPerSecond = settings.wordsPerMinute / 60.0
@@ -256,6 +261,9 @@ fun TeleprompterScreen(
         val wordsToSkip = (10 * wordsPerSecond).toInt()
         currentWordIndex = min(currentWordIndex + wordsToSkip, content.words.size - 1)
         elapsedTime = currentWordIndex / wordsPerSecond
+        // Reset wall-clock anchor so the timer loop continues from the new position
+        timerStartNanos[0] = System.nanoTime()
+        elapsedTimeAtStart[0] = elapsedTime
     }
 
     fun seekBackward() {
@@ -263,6 +271,9 @@ fun TeleprompterScreen(
         val wordsToSkip = (10 * wordsPerSecond).toInt()
         currentWordIndex = max(currentWordIndex - wordsToSkip, 0)
         elapsedTime = currentWordIndex / wordsPerSecond
+        // Reset wall-clock anchor so the timer loop continues from the new position
+        timerStartNanos[0] = System.nanoTime()
+        elapsedTimeAtStart[0] = elapsedTime
     }
 
     val density = LocalDensity.current

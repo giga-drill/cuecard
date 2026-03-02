@@ -37,6 +37,8 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
 
     private var displayLink: CADisplayLink?
     private var playbackTimer: Timer?
+    private var playbackTimerStartDate: Date?
+    private var elapsedTimeAtPlaybackStart: Double = 0
 
     // MARK: - Callbacks
 
@@ -139,11 +141,13 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
 
     private func startPlaybackTimer() {
         stopPlaybackTimer()
+        playbackTimerStartDate = Date()
+        elapsedTimeAtPlaybackStart = elapsedTime
         let interval = 1.0 / 30.0
         playbackTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
-                guard let self = self, self.isPlaying else { return }
-                self.elapsedTime += interval
+                guard let self = self, self.isPlaying, let startDate = self.playbackTimerStartDate else { return }
+                self.elapsedTime = self.elapsedTimeAtPlaybackStart + Date().timeIntervalSince(startDate)
                 self.updateCurrentWordIndex()
                 self.updateContentView()
             }
@@ -153,6 +157,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     private func stopPlaybackTimer() {
         playbackTimer?.invalidate()
         playbackTimer = nil
+        playbackTimerStartDate = nil  // Prevents stale Task blocks from writing elapsedTime
     }
 
     /// Stop PiP mode
@@ -169,6 +174,11 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     /// Seek forward 10 seconds
     func seekForward() {
         elapsedTime = min(elapsedTime + 10, timerDuration > 0 ? Double(timerDuration + 60) : 3600)
+        // Reset wall-clock anchor so the playback timer continues from the new position
+        if playbackTimerStartDate != nil {
+            playbackTimerStartDate = Date()
+            elapsedTimeAtPlaybackStart = elapsedTime
+        }
         updateCurrentWordIndex()
         updateContentView()
     }
@@ -176,6 +186,11 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     /// Seek backward 10 seconds
     func seekBackward() {
         elapsedTime = max(elapsedTime - 10, 0)
+        // Reset wall-clock anchor so the playback timer continues from the new position
+        if playbackTimerStartDate != nil {
+            playbackTimerStartDate = Date()
+            elapsedTimeAtPlaybackStart = elapsedTime
+        }
         updateCurrentWordIndex()
         updateContentView()
     }
