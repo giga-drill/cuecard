@@ -240,9 +240,6 @@ struct TeleprompterView: View {
                 elapsedTime = pipManager.elapsedTime
                 isPlaying = pipManager.isPlaying
                 updateCurrentWord()
-                if isPlaying && timer == nil {
-                    startTimer()
-                }
             }
         }
     }
@@ -279,7 +276,9 @@ struct TeleprompterView: View {
         pipManager.onPlayPauseFromPiP = { playing in
             if playing {
                 isPlaying = true
-                startTimer()
+                if !pipManager.isPiPActive {
+                    startTimer()
+                }
             } else {
                 isPlaying = false
                 stopTimer()
