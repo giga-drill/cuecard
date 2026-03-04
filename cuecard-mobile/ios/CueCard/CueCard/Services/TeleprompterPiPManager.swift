@@ -19,7 +19,6 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     private(set) var settings: TeleprompterSettings = .default
     private(set) var timerDuration: Int = 0
     private(set) var elapsedTime: Double = 0
-    private(set) var currentWordIndex: Int = 0
     private(set) var isDarkMode: Bool = true
     private(set) var totalWords: Int = 0
     private(set) var countdownValue: Int = 0
@@ -64,7 +63,6 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         self.settings = settings
         self.timerDuration = timerDuration
         self.elapsedTime = 0
-        self.currentWordIndex = 0
         self.isDarkMode = colorScheme == .dark
 
         let parsedContent = TeleprompterParser.parseNotes(text)
@@ -77,7 +75,6 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     func updateState(elapsedTime: Double, isPlaying: Bool, currentWordIndex: Int = 0, countdownValue: Int = 0, isCountingDown: Bool = false) {
         self.elapsedTime = elapsedTime
         self.isPlaying = isPlaying
-        self.currentWordIndex = currentWordIndex
         self.countdownValue = countdownValue
         self.isCountingDown = isCountingDown
         needsContentViewUpdate = true
@@ -120,7 +117,6 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     func restartFromPiP() {
         stopPlaybackTimer()
         elapsedTime = 0
-        currentWordIndex = 0
         isPlaying = false
         onRestartFromPiP?()
         updateContentView()
@@ -154,7 +150,6 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     @objc private func handlePlaybackTimerTick() {
         guard isPlaying, let startDate = playbackTimerStartDate else { return }
         elapsedTime = elapsedTimeAtPlaybackStart + Date().timeIntervalSince(startDate)
-        updateCurrentWordIndex()
         // Keep PiP motion smooth by rendering every playback tick.
         needsContentViewUpdate = true
     }
@@ -184,7 +179,6 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             playbackTimerStartDate = Date()
             elapsedTimeAtPlaybackStart = elapsedTime
         }
-        updateCurrentWordIndex()
         updateContentView()
     }
 
@@ -196,7 +190,6 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             playbackTimerStartDate = Date()
             elapsedTimeAtPlaybackStart = elapsedTime
         }
-        updateCurrentWordIndex()
         updateContentView()
     }
 
@@ -333,11 +326,6 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         // Show countdown value if counting down (in mm:ss format), otherwise show timer
         let timerText = isCountingDown ? TeleprompterParser.formatTime(countdownValue) : TeleprompterParser.formatTime(remainingTime)
 
-        let wordsPerSecond = Double(settings.wordsPerMinute) / 60.0
-        let highlightProgress = (elapsedTime == 0 && !isPlaying)
-            ? -Double.greatestFiniteMagnitude
-            : (elapsedTime * wordsPerSecond)
-
         teleprompterContentView?.update(
             text: text,
             fontSize: fontSize,
@@ -345,8 +333,9 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             timerText: timerText,
             timerDuration: timerDuration,
             remainingTime: remainingTime,
-            currentWordIndex: currentWordIndex,
-            highlightProgress: highlightProgress,
+            elapsedTime: elapsedTime,
+            totalWords: totalWords,
+            wordsPerMinute: settings.wordsPerMinute,
             isCountingDown: isCountingDown
         )
 
@@ -357,20 +346,11 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             timerText: timerText,
             timerDuration: timerDuration,
             remainingTime: remainingTime,
-            currentWordIndex: currentWordIndex,
-            highlightProgress: highlightProgress,
+            elapsedTime: elapsedTime,
+            totalWords: totalWords,
+            wordsPerMinute: settings.wordsPerMinute,
             isCountingDown: isCountingDown
         )
-    }
-
-    private func updateCurrentWordIndex() {
-        guard totalWords > 0 else {
-            currentWordIndex = 0
-            return
-        }
-        let wordsPerSecond = Double(settings.wordsPerMinute) / 60.0
-        let newWordIndex = min(Int(Double(elapsedTime) * wordsPerSecond), totalWords - 1)
-        currentWordIndex = max(newWordIndex, 0)
     }
 
     // MARK: - Scroll Timer
@@ -427,11 +407,6 @@ private class TeleprompterPiPContentView: UIView {
     private var topGradientLayer: CAGradientLayer?
     private var bottomGradientLayer: CAGradientLayer?
     private var lastContentId: String = ""
-    private var lastWordIndex: Int = -1
-    private var lastProgressBucket: Double = -1
-    private var cachedWordRanges: [NSRange] = []
-    private var cachedLineWordRanges: [(start: Int, end: Int)] = []
-    private var cachedNoteWordIndices: Set<Int> = []
 
     var isDarkMode: Bool = true {
         didSet {
@@ -544,51 +519,22 @@ private class TeleprompterPiPContentView: UIView {
         timerText: String,
         timerDuration: Int,
         remainingTime: Int,
-        currentWordIndex: Int,
-        highlightProgress: Double,
+        elapsedTime: Double,
+        totalWords: Int,
+        wordsPerMinute: Int,
         isCountingDown: Bool = false
     ) {
-        let contentId = text
-        let hasActiveHighlight = highlightProgress > -1_000_000_000
-        let progressBucket = hasActiveHighlight
-            ? ((highlightProgress * 10).rounded(.down) / 10)
-            : -Double.greatestFiniteMagnitude
-        let previousWordIndex = lastWordIndex
-        let needsFullRebuild = lastContentId != contentId
-        let needsHighlightUpdate = !needsFullRebuild && lastProgressBucket != progressBucket
-        let needsWordChange = previousWordIndex != currentWordIndex
+        let needsFullRebuild = lastContentId != text
 
         if needsFullRebuild {
-            // Full rebuild: set attributedText and cache word ranges
-            textView.attributedText = buildAttributedString(
-                text: text,
-                fontSize: fontSize,
-                currentWordIndex: currentWordIndex,
-                highlightProgress: highlightProgress
-            )
+            textView.attributedText = buildAttributedString(text: text, fontSize: fontSize)
             textView.layoutIfNeeded()
             textView.contentOffset = .zero
-            cachedWordRanges = getWordRanges(from: text)
-            cachedLineWordRanges = getLineWordRanges(from: text)
-            cachedNoteWordIndices = getNoteWordIndices(from: text)
-            lastContentId = contentId
-            lastProgressBucket = progressBucket
-        } else if needsHighlightUpdate || needsWordChange {
-            updateHighlightColors(
-                previousWordIndex: previousWordIndex,
-                currentWordIndex: currentWordIndex,
-                highlightProgress: highlightProgress
-            )
-            lastProgressBucket = progressBucket
+            lastContentId = text
         }
 
-        if hasActiveHighlight {
-            let didSeekOrJump = previousWordIndex >= 0 && abs(currentWordIndex - previousWordIndex) > 12
-            let shouldSnap = needsFullRebuild || !isPlaying || didSeekOrJump
-            updateHybridScroll(highlightProgress: highlightProgress, snapToTarget: shouldSnap)
-        }
-
-        lastWordIndex = currentWordIndex
+        // Continuous time-based scroll
+        updateContinuousScroll(elapsedTime: elapsedTime, totalWords: totalWords, wordsPerMinute: wordsPerMinute, snap: needsFullRebuild)
 
         timerLabel.text = " \(timerText) "
         if isCountingDown {
@@ -603,157 +549,44 @@ private class TeleprompterPiPContentView: UIView {
         timerLabel.backgroundColor = (isDarkMode ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background).withAlphaComponent(0.8)
     }
 
-    private func updateHighlightColors(previousWordIndex: Int, currentWordIndex: Int, highlightProgress: Double) {
-        guard !cachedWordRanges.isEmpty else { return }
-        let textColor = isDarkMode ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
-        let fadeRange = 2.0
+    private func updateContinuousScroll(elapsedTime: Double, totalWords: Int, wordsPerMinute: Int, snap: Bool) {
+        guard totalWords > 0, wordsPerMinute > 0 else { return }
 
-        let shouldRecolorAllWords = previousWordIndex < 0 || abs(currentWordIndex - previousWordIndex) > 16
-        let lowerBound: Int
-        let upperBound: Int
-        if shouldRecolorAllWords {
-            lowerBound = 0
-            upperBound = cachedWordRanges.count - 1
-        } else {
-            let minIndex = min(previousWordIndex, currentWordIndex)
-            let maxIndex = max(previousWordIndex, currentWordIndex)
-            lowerBound = max(0, minIndex - 4)
-            upperBound = min(cachedWordRanges.count - 1, maxIndex + 4)
-        }
-        guard upperBound >= lowerBound else { return }
-
-        textView.textStorage.beginEditing()
-        for wordIndex in lowerBound...upperBound {
-            if cachedNoteWordIndices.contains(wordIndex) { continue }
-            let range = cachedWordRanges[wordIndex]
-            let distance = highlightProgress - Double(wordIndex)
-            let t = min(max((distance + fadeRange) / fadeRange, 0.0), 1.0)
-            let blend = t * t * (3.0 - 2.0 * t)
-            let alpha = 0.3 + CGFloat(blend) * 0.7
-            textView.textStorage.addAttribute(
-                .foregroundColor,
-                value: textColor.withAlphaComponent(alpha),
-                range: range
-            )
-        }
-        textView.textStorage.endEditing()
-    }
-
-    private func updateHybridScroll(highlightProgress: Double, snapToTarget: Bool) {
-        guard !cachedWordRanges.isEmpty else { return }
-        guard !cachedLineWordRanges.isEmpty else { return }
-
-        let maxIndex = Double(cachedWordRanges.count - 1)
-        let clampedProgress = min(max(highlightProgress, 0), maxIndex)
-        let clampedWordIndex = Int(floor(clampedProgress))
-        guard let currentLineIndex = lineIndex(for: clampedWordIndex) else { return }
-        let currentLine = cachedLineWordRanges[currentLineIndex]
-        let nextLineIndex = min(currentLineIndex + 1, cachedLineWordRanges.count - 1)
-
-        guard let currentLineCenterY = lineCenterY(for: currentLineIndex),
-              let nextLineCenterY = lineCenterY(for: nextLineIndex) else { return }
-
-        // Hybrid behavior:
-        // 1) Hold mostly steady on the current line for readability.
-        // 2) Pre-scroll smoothly to the next line near the end of the current line.
-        // 3) Keep a tiny correction while holding to prevent drift.
-        let lineSpan = max(1, currentLine.end - currentLine.start + 1)
-        let lineProgressRaw = (clampedProgress - Double(currentLine.start)) / Double(lineSpan)
-        let lineProgress = min(max(lineProgressRaw, 0), 1)
-
-        let preScrollStart = 0.80
-        let transitionT: CGFloat
-        if lineProgress <= preScrollStart {
-            transitionT = 0
-        } else {
-            let rawT = (lineProgress - preScrollStart) / (1.0 - preScrollStart)
-            let t = min(max(rawT, 0), 1)
-            // Smoothstep easing for a natural glide.
-            transitionT = CGFloat(t * t * (3.0 - 2.0 * t))
-        }
-
-        let focusCenterY = currentLineCenterY + (nextLineCenterY - currentLineCenterY) * transitionT
-        let focusFraction: CGFloat = 0.36
-        let targetY = focusCenterY - textView.bounds.height * focusFraction
+        let wordsPerSecond = Double(wordsPerMinute) / 60.0
+        let totalReadDuration = Double(totalWords) / wordsPerSecond
+        let scrollFraction = min(max(elapsedTime / totalReadDuration, 0), 1)
         let maxY = max(0, textView.contentSize.height - textView.bounds.height)
-        let clampedTargetY = max(0, min(targetY, maxY))
-        let targetOffset = CGPoint(x: 0, y: clampedTargetY)
+        let targetY = scrollFraction * maxY
 
-        if snapToTarget {
-            textView.layer.removeAllAnimations()
-            textView.setContentOffset(targetOffset, animated: false)
+        if snap {
+            textView.setContentOffset(CGPoint(x: 0, y: targetY), animated: false)
             return
         }
 
         let currentY = textView.contentOffset.y
-        let delta = clampedTargetY - currentY
-        if abs(delta) < 0.1 { return }
-
-        let inTransition = lineProgress > preScrollStart
-        let adaptiveGain: CGFloat = inTransition
-            ? min(0.34, max(0.22, abs(delta) / 72.0))
-            : min(0.16, max(0.10, abs(delta) / 140.0))
-        var step = delta * adaptiveGain
-        let maxStepPerFrame: CGFloat = inTransition ? 8.0 : 2.6
-        if step > maxStepPerFrame { step = maxStepPerFrame }
-        if step < -maxStepPerFrame { step = -maxStepPerFrame }
-        let nextY = currentY + step
-        textView.setContentOffset(CGPoint(x: 0, y: nextY), animated: false)
-    }
-
-    private func lineIndex(for wordIndex: Int) -> Int? {
-        guard !cachedLineWordRanges.isEmpty else { return nil }
-        let maxWordIndex = cachedLineWordRanges[cachedLineWordRanges.count - 1].end
-        let clampedWordIndex = max(0, min(wordIndex, maxWordIndex))
-        for (index, lineRange) in cachedLineWordRanges.enumerated() {
-            if clampedWordIndex >= lineRange.start && clampedWordIndex <= lineRange.end {
-                return index
-            }
+        let delta = targetY - currentY
+        if abs(delta) < 0.5 {
+            textView.setContentOffset(CGPoint(x: 0, y: targetY), animated: false)
+            return
         }
-        return nil
-    }
 
-    private func lineCenterY(for lineIndex: Int) -> CGFloat? {
-        guard lineIndex >= 0, lineIndex < cachedLineWordRanges.count else { return nil }
-        let anchorWordIndex = cachedLineWordRanges[lineIndex].start
-        return wordCenterY(for: anchorWordIndex)
-    }
-
-    private func wordCenterY(for index: Int) -> CGFloat? {
-        guard index >= 0, index < cachedWordRanges.count else { return nil }
-        let range = cachedWordRanges[index]
-        let glyphRange = textView.layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
-        let rect = textView.layoutManager.boundingRect(forGlyphRange: glyphRange, in: textView.textContainer)
-        return rect.midY + textView.textContainerInset.top
+        // Smooth interpolation toward target
+        let step = delta * 0.2
+        textView.setContentOffset(CGPoint(x: 0, y: currentY + step), animated: false)
     }
 
     private func buildAttributedString(
         text: String,
-        fontSize: CGFloat,
-        currentWordIndex: Int,
-        highlightProgress: Double
+        fontSize: CGFloat
     ) -> NSAttributedString {
         let result = NSMutableAttributedString()
         let font = UIFont.systemFont(ofSize: fontSize, weight: .medium)
         let noteFont = UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold)
         let noteKern = fontSize * 0.05
-        let fadeRange = 2.0
-
-        func smoothstep(_ edge0: Double, _ edge1: Double, _ x: Double) -> Double {
-            let t = min(max((x - edge0) / (edge1 - edge0), 0.0), 1.0)
-            return t * t * (3.0 - 2.0 * t)
-        }
-
-        func highlightAlpha(for index: Int) -> CGFloat {
-            let distance = highlightProgress - Double(index)
-            let blend = smoothstep(-fadeRange, 0.0, distance)
-            return 0.3 + CGFloat(blend) * 0.7
-        }
 
         let textColor = isDarkMode ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
         let pinkColor = isDarkMode ? AppColors.UIColors.Dark.pink : AppColors.UIColors.Light.pink
 
-        var globalWordIndex = 0
         let paragraphs = text.components(separatedBy: "\n\n")
 
         for (paragraphIndex, paragraph) in paragraphs.enumerated() {
@@ -783,29 +616,19 @@ private class TeleprompterPiPContentView: UIView {
                             result.append(NSAttributedString(string: " ", attributes: noteAttrs))
                         }
                         result.append(NSAttributedString(string: String(word), attributes: noteAttrs))
-                        globalWordIndex += 1
                     }
                 } else {
                     let words = line.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
+                    let wordAttrs: [NSAttributedString.Key: Any] = [
+                        .font: font,
+                        .foregroundColor: textColor
+                    ]
 
                     for (wordIndex, word) in words.enumerated() {
                         if wordIndex > 0 {
-                            result.append(NSAttributedString(string: " ", attributes: [
-                                .font: font,
-                                .foregroundColor: textColor
-                            ]))
+                            result.append(NSAttributedString(string: " ", attributes: wordAttrs))
                         }
-
-                        let alpha = highlightAlpha(for: globalWordIndex)
-                        let color = textColor.withAlphaComponent(alpha)
-
-                        let attrs: [NSAttributedString.Key: Any] = [
-                            .font: font,
-                            .foregroundColor: color
-                        ]
-                        result.append(NSAttributedString(string: word, attributes: attrs))
-
-                        globalWordIndex += 1
+                        result.append(NSAttributedString(string: word, attributes: wordAttrs))
                     }
                 }
             }
@@ -819,106 +642,6 @@ private class TeleprompterPiPContentView: UIView {
         }
 
         return result
-    }
-
-    private func getWordRanges(from text: String) -> [NSRange] {
-        var ranges: [NSRange] = []
-        let fullText = NSMutableString()
-        let paragraphs = text.components(separatedBy: "\n\n")
-
-        for (paragraphIndex, paragraph) in paragraphs.enumerated() {
-            if paragraphIndex > 0 {
-                fullText.append("\n")
-            }
-
-            let lines = paragraph.components(separatedBy: "\n")
-
-            for (lineIndex, line) in lines.enumerated() {
-                if lineIndex > 0 {
-                    fullText.append("\n")
-                }
-
-                if line.isEmpty { continue }
-
-                if line.contains("[note") {
-                    let noteContent = extractNoteContent(from: line)
-                    let noteWords = noteContent.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
-                    for (wordIndex, word) in noteWords.enumerated() {
-                        if wordIndex > 0 {
-                            fullText.append(" ")
-                        }
-                        let location = fullText.length
-                        fullText.append(word)
-                        ranges.append(NSRange(location: location, length: word.count))
-                    }
-                } else {
-                    let words = line.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
-
-                    for (wordIndex, word) in words.enumerated() {
-                        if wordIndex > 0 {
-                            fullText.append(" ")
-                        }
-                        let location = fullText.length
-                        fullText.append(word)
-                        ranges.append(NSRange(location: location, length: word.count))
-                    }
-                }
-            }
-        }
-
-        return ranges
-    }
-
-    private func getLineWordRanges(from text: String) -> [(start: Int, end: Int)] {
-        var lineRanges: [(start: Int, end: Int)] = []
-        var globalWordIndex = 0
-        let paragraphs = text.components(separatedBy: "\n\n")
-
-        for paragraph in paragraphs {
-            let lines = paragraph.components(separatedBy: "\n")
-            for line in lines {
-                if line.isEmpty { continue }
-                let wordCount = wordsInDisplayLine(line)
-                if wordCount == 0 { continue }
-                let start = globalWordIndex
-                globalWordIndex += wordCount
-                lineRanges.append((start: start, end: globalWordIndex - 1))
-            }
-        }
-
-        return lineRanges
-    }
-
-    private func wordsInDisplayLine(_ line: String) -> Int {
-        if line.contains("[note") {
-            let noteContent = extractNoteContent(from: line)
-            return noteContent.split(separator: " ", omittingEmptySubsequences: true).count
-        }
-        return line.split(separator: " ", omittingEmptySubsequences: true).count
-    }
-
-    private func getNoteWordIndices(from text: String) -> Set<Int> {
-        var indices = Set<Int>()
-        var globalWordIndex = 0
-        let paragraphs = text.components(separatedBy: "\n\n")
-        for paragraph in paragraphs {
-            let lines = paragraph.components(separatedBy: "\n")
-            for line in lines {
-                if line.isEmpty { continue }
-                if line.contains("[note") {
-                    let noteContent = extractNoteContent(from: line)
-                    let noteWords = noteContent.split(separator: " ", omittingEmptySubsequences: true)
-                    for _ in noteWords {
-                        indices.insert(globalWordIndex)
-                        globalWordIndex += 1
-                    }
-                } else {
-                    let words = line.split(separator: " ", omittingEmptySubsequences: true)
-                    globalWordIndex += words.count
-                }
-            }
-        }
-        return indices
     }
 
     private func extractNoteContent(from line: String) -> String {
