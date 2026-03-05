@@ -603,32 +603,38 @@ private class TeleprompterPiPContentView: UIView {
 
                 if line.isEmpty { continue }
 
-                if line.contains("[note") {
-                    let noteContent = extractNoteContent(from: line)
-                    let noteAttrs: [NSAttributedString.Key: Any] = [
-                        .font: noteFont,
-                        .foregroundColor: pinkColor,
-                        .kern: noteKern
-                    ]
-                    let noteWords = noteContent.split(separator: " ", omittingEmptySubsequences: true)
-                    for (wordIndex, word) in noteWords.enumerated() {
-                        if wordIndex > 0 {
-                            result.append(NSAttributedString(string: " ", attributes: noteAttrs))
-                        }
-                        result.append(NSAttributedString(string: String(word), attributes: noteAttrs))
-                    }
-                } else {
-                    let words = line.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
-                    let wordAttrs: [NSAttributedString.Key: Any] = [
-                        .font: font,
-                        .foregroundColor: textColor
-                    ]
+                let segments = splitLineIntoSegments(line)
+                var lineWordIndex = 0
 
-                    for (wordIndex, word) in words.enumerated() {
-                        if wordIndex > 0 {
-                            result.append(NSAttributedString(string: " ", attributes: wordAttrs))
+                for segment in segments {
+                    switch segment {
+                    case .note(let noteContent):
+                        let noteAttrs: [NSAttributedString.Key: Any] = [
+                            .font: noteFont,
+                            .foregroundColor: pinkColor,
+                            .kern: noteKern
+                        ]
+                        let noteWords = noteContent.split(separator: " ", omittingEmptySubsequences: true)
+                        for word in noteWords {
+                            if lineWordIndex > 0 {
+                                result.append(NSAttributedString(string: " ", attributes: noteAttrs))
+                            }
+                            result.append(NSAttributedString(string: String(word), attributes: noteAttrs))
+                            lineWordIndex += 1
                         }
-                        result.append(NSAttributedString(string: word, attributes: wordAttrs))
+                    case .text(let textContent):
+                        let wordAttrs: [NSAttributedString.Key: Any] = [
+                            .font: font,
+                            .foregroundColor: textColor
+                        ]
+                        let words = textContent.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
+                        for word in words {
+                            if lineWordIndex > 0 {
+                                result.append(NSAttributedString(string: " ", attributes: wordAttrs))
+                            }
+                            result.append(NSAttributedString(string: word, attributes: wordAttrs))
+                            lineWordIndex += 1
+                        }
                     }
                 }
             }
@@ -644,13 +650,49 @@ private class TeleprompterPiPContentView: UIView {
         return result
     }
 
-    private func extractNoteContent(from line: String) -> String {
+    private enum LineSegment {
+        case text(String)
+        case note(String)
+    }
+
+    private func splitLineIntoSegments(_ line: String) -> [LineSegment] {
         let pattern = #"\[note\s+([^\]]+)\]"#
-        guard let regex = try? NSRegularExpression(pattern: pattern),
-              let match = regex.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)),
-              let contentRange = Range(match.range(at: 1), in: line) else {
-            return line
+        guard let regex = try? NSRegularExpression(pattern: pattern) else {
+            return [.text(line)]
         }
-        return String(line[contentRange])
+
+        let nsLine = line as NSString
+        let matches = regex.matches(in: line, range: NSRange(location: 0, length: nsLine.length))
+
+        if matches.isEmpty {
+            return [.text(line)]
+        }
+
+        var segments: [LineSegment] = []
+        var lastEnd = line.startIndex
+
+        for match in matches {
+            guard let fullRange = Range(match.range, in: line),
+                  let contentRange = Range(match.range(at: 1), in: line) else { continue }
+
+            if lastEnd < fullRange.lowerBound {
+                let before = String(line[lastEnd..<fullRange.lowerBound]).trimmingCharacters(in: .whitespaces)
+                if !before.isEmpty {
+                    segments.append(.text(before))
+                }
+            }
+
+            segments.append(.note(String(line[contentRange])))
+            lastEnd = fullRange.upperBound
+        }
+
+        if lastEnd < line.endIndex {
+            let after = String(line[lastEnd...]).trimmingCharacters(in: .whitespaces)
+            if !after.isEmpty {
+                segments.append(.text(after))
+            }
+        }
+
+        return segments
     }
 }

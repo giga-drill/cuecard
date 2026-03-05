@@ -637,45 +637,48 @@ struct AttributedTextView: UIViewRepresentable {
 
                 if line.isEmpty { continue }
 
-                // Check if this is a note line
-                if line.contains("[note") {
-                    let noteContent = extractNoteContent(from: line)
-                    let noteAttrs: [NSAttributedString.Key: Any] = [
-                        .font: UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold),
-                        .foregroundColor: pinkColor,
-                        .kern: noteKern
-                    ]
-                    let noteWords = noteContent.split(separator: " ", omittingEmptySubsequences: true)
-                    for (wordIndex, word) in noteWords.enumerated() {
-                        if wordIndex > 0 {
-                            result.append(NSAttributedString(string: " ", attributes: noteAttrs))
-                        }
-                        result.append(NSAttributedString(string: String(word), attributes: noteAttrs))
-                        globalWordIndex += 1
-                    }
-                } else {
-                    // Regular text with word highlighting
-                    let words = line.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
+                let segments = splitLineIntoSegments(line)
+                var lineWordIndex = 0
 
-                    for (wordIndex, word) in words.enumerated() {
-                        if wordIndex > 0 {
-                            result.append(NSAttributedString(string: " ", attributes: [
-                                .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
-                                .foregroundColor: textColor
-                            ]))
-                        }
-
-                        let weight: UIFont.Weight = .medium
-                        let alpha = highlightAlpha(for: globalWordIndex)
-                        let color = textColor.withAlphaComponent(alpha)
-
-                        let attrs: [NSAttributedString.Key: Any] = [
-                            .font: UIFont.systemFont(ofSize: fontSize, weight: weight),
-                            .foregroundColor: color
+                for segment in segments {
+                    switch segment {
+                    case .note(let noteContent):
+                        let noteAttrs: [NSAttributedString.Key: Any] = [
+                            .font: UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold),
+                            .foregroundColor: pinkColor,
+                            .kern: noteKern
                         ]
-                        result.append(NSAttributedString(string: word, attributes: attrs))
+                        let noteWords = noteContent.split(separator: " ", omittingEmptySubsequences: true)
+                        for word in noteWords {
+                            if lineWordIndex > 0 {
+                                result.append(NSAttributedString(string: " ", attributes: noteAttrs))
+                            }
+                            result.append(NSAttributedString(string: String(word), attributes: noteAttrs))
+                            globalWordIndex += 1
+                            lineWordIndex += 1
+                        }
+                    case .text(let textContent):
+                        let words = textContent.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
+                        for word in words {
+                            if lineWordIndex > 0 {
+                                result.append(NSAttributedString(string: " ", attributes: [
+                                    .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
+                                    .foregroundColor: textColor
+                                ]))
+                            }
 
-                        globalWordIndex += 1
+                            let alpha = highlightAlpha(for: globalWordIndex)
+                            let color = textColor.withAlphaComponent(alpha)
+
+                            let attrs: [NSAttributedString.Key: Any] = [
+                                .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
+                                .foregroundColor: color
+                            ]
+                            result.append(NSAttributedString(string: word, attributes: attrs))
+
+                            globalWordIndex += 1
+                            lineWordIndex += 1
+                        }
                     }
                 }
             }
@@ -709,27 +712,25 @@ struct AttributedTextView: UIViewRepresentable {
 
                 if line.isEmpty { continue }
 
-                if line.contains("[note") {
-                    let noteContent = extractNoteContent(from: line)
-                    let noteWords = noteContent.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
-                    for (wordIndex, word) in noteWords.enumerated() {
-                        if wordIndex > 0 {
-                            fullText.append(" ")
-                        }
-                        let location = fullText.length
-                        fullText.append(word)
-                        ranges.append(NSRange(location: location, length: word.count))
-                    }
-                } else {
-                    let words = line.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
+                let segments = splitLineIntoSegments(line)
+                var lineWordIndex = 0
 
-                    for (wordIndex, word) in words.enumerated() {
-                        if wordIndex > 0 {
+                for segment in segments {
+                    let segmentText: String
+                    switch segment {
+                    case .note(let content): segmentText = content
+                    case .text(let content): segmentText = content
+                    }
+
+                    let words = segmentText.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
+                    for word in words {
+                        if lineWordIndex > 0 {
                             fullText.append(" ")
                         }
                         let location = fullText.length
                         fullText.append(word)
                         ranges.append(NSRange(location: location, length: word.count))
+                        lineWordIndex += 1
                     }
                 }
             }
@@ -738,14 +739,52 @@ struct AttributedTextView: UIViewRepresentable {
         return ranges
     }
 
-    private func extractNoteContent(from line: String) -> String {
+    private enum LineSegment {
+        case text(String)
+        case note(String)
+    }
+
+    private func splitLineIntoSegments(_ line: String) -> [LineSegment] {
         let pattern = #"\[note\s+([^\]]+)\]"#
-        guard let regex = try? NSRegularExpression(pattern: pattern),
-              let match = regex.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)),
-              let contentRange = Range(match.range(at: 1), in: line) else {
-            return line
+        guard let regex = try? NSRegularExpression(pattern: pattern) else {
+            return [.text(line)]
         }
-        return String(line[contentRange])
+
+        let nsLine = line as NSString
+        let matches = regex.matches(in: line, range: NSRange(location: 0, length: nsLine.length))
+
+        if matches.isEmpty {
+            return [.text(line)]
+        }
+
+        var segments: [LineSegment] = []
+        var lastEnd = line.startIndex
+
+        for match in matches {
+            guard let fullRange = Range(match.range, in: line),
+                  let contentRange = Range(match.range(at: 1), in: line) else { continue }
+
+            // Text before the note
+            if lastEnd < fullRange.lowerBound {
+                let before = String(line[lastEnd..<fullRange.lowerBound]).trimmingCharacters(in: .whitespaces)
+                if !before.isEmpty {
+                    segments.append(.text(before))
+                }
+            }
+
+            segments.append(.note(String(line[contentRange])))
+            lastEnd = fullRange.upperBound
+        }
+
+        // Text after the last note
+        if lastEnd < line.endIndex {
+            let after = String(line[lastEnd...]).trimmingCharacters(in: .whitespaces)
+            if !after.isEmpty {
+                segments.append(.text(after))
+            }
+        }
+
+        return segments
     }
 }
 
