@@ -264,7 +264,7 @@ Try it out. I think you'll love it.
         var needsSave = false
         if let data = userDefaults.data(forKey: settingsKey),
            let decoded = try? JSONDecoder().decode(TeleprompterSettings.self, from: data) {
-            var normalizedSettings = decoded
+            let normalizedSettings = decoded
             self.settings = normalizedSettings
         } else {
             self.settings = .default

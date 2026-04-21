@@ -11,7 +11,6 @@
 		002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102 /* ContentView.swift */; };
 		003 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103 /* LoginView.swift */; };
 		004 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 104 /* HomeView.swift */; };
-		005 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 105 /* ProfileView.swift */; };
 		006 /* AuthenticationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 106 /* AuthenticationService.swift */; };
 		007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 201 /* Assets.xcassets */; };
 		008 /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108 /* SettingsService.swift */; };
@@ -34,7 +33,6 @@
 		102 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		103 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		104 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
-		105 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		106 /* AuthenticationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationService.swift; sourceTree = "<group>"; };
 		107 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		108 /* SettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsService.swift; sourceTree = "<group>"; };
@@ -96,7 +94,6 @@
 				102 /* ContentView.swift */,
 				103 /* LoginView.swift */,
 				104 /* HomeView.swift */,
-				105 /* ProfileView.swift */,
 				109 /* SettingsView.swift */,
 				110 /* TeleprompterView.swift */,
 			);
@@ -248,7 +245,6 @@
 				002 /* ContentView.swift in Sources */,
 				003 /* LoginView.swift in Sources */,
 				004 /* HomeView.swift in Sources */,
-				005 /* ProfileView.swift in Sources */,
 				006 /* AuthenticationService.swift in Sources */,
 				008 /* SettingsService.swift in Sources */,
 				013 /* SettingsView.swift in Sources */,

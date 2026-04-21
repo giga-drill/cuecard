@@ -98,10 +98,7 @@ struct HomeView: View {
                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                                     .fill(AppColors.background(for: colorScheme))
                             )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .stroke(AppColors.textSecondary(for: colorScheme).opacity(0.2))
-                            )
+                            .shadow(color: Color.black.opacity(0.1), radius: 10)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                         }
 
