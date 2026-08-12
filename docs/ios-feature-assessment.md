@@ -27,10 +27,20 @@
 
 ## 基线运行风险
 
-1. 工程依赖 Firebase、Google Sign-In、Analytics 和 Crashlytics，但仓库没有提交 `GoogleService-Info.plist`。必须新建自己的 Firebase 配置，或在本项目中移除账号和统计依赖。
-2. iOS README 写的是 iOS 17+，工程目标配置中同时出现 17.0 和 16.6，需要统一。
-3. 当前通过 `UIApplication.shared.perform(#selector(NSXPCConnection.suspend))` 主动把 App 送入后台。这不是应当依赖的公开产品接口，做可发布版本时需要移除，并改成用户正常切换 App 或系统允许的 PiP 流程。
+1. 上游工程依赖 Firebase、Google Sign-In、Analytics 和 Crashlytics，但仓库没有提交 `GoogleService-Info.plist`。本 fork 已选择本地优先、无账号路线，并移除这些依赖。
+2. 上游工程目标配置同时出现 17.0 和 16.6；本 fork 已按 iOS README 统一为 iOS 17.0+。
+3. 上游通过 `UIApplication.shared.perform(#selector(NSXPCConnection.suspend))` 主动把 App 送入后台。这不是应当依赖的公开产品接口；本 fork 已移除该调用，改为启动 PiP 后由用户正常切换 App。
 4. 当前没有测试。语音匹配和方向切换都属于容易回归的状态逻辑，新增功能必须同时补测试。
+
+## 为什么不需要 Firebase
+
+Firebase 与悬浮提词、自动滚动、横竖屏和语音跟读没有技术依赖。上游只把它用于：
+
+- Firebase Auth：Apple/Google 账号登录；
+- Analytics：页面和按钮事件；
+- Crashlytics：线上崩溃收集。
+
+现有文稿和设置本来就保存在本机，并没有依赖 Firebase 同步。对当前个人、本地优先版本，保留 Firebase 只会增加账号配置、隐私披露、网络依赖和构建体积，因此本 fork 已移除登录页、账号管理、Google Sign-In、Analytics、Crashlytics 和对应 Swift Package。代价是暂时没有登录、跨设备同步和云端崩溃统计；这些都可以等产品确实需要时再单独引入，不必绑定 Firebase。
 
 ## 功能一：横竖屏悬浮布局
 
@@ -115,18 +125,31 @@ Apple 的 `requiresOnDeviceRecognition` 只有在当前语言和设备的 `suppo
 
 ## 推荐实施顺序
 
-1. **基线清理（0.5–2 天）**：决定保留 Firebase 登录还是改成本地无账号；统一 iOS 最低版本；确保真机能稳定进入 PiP。
+1. **基线清理（0.5–2 天）**：已确定本地无账号、移除 Firebase并统一为 iOS 17.0+；下一步确保真机能稳定进入 PiP。
 2. **横竖屏切片（1.5–3 天）**：实现方向模型、竖向比例和进度无损切换，并在真机验收。
 3. **语音共存验证（1–2 天）**：只接最小 Speech 流，不做复杂匹配；验证系统相机和目标短视频 App 是否会抢占麦克风。
 4. **产品决策门**：若外部 App 兼容性可接受，继续路线 A；若不可接受，在“仅支持兼容 App”与“内置相机”之间做明确选择。
 5. **语音跟读 MVP（7–12 天）**：完成中文文本标准化、局部对齐、滚动协调、中断恢复和单元测试。
 6. **真机回归（2–4 天）**：不同机型、方向、麦克风、长文稿、停顿/口误/跳句及目标录制 App。
 
+## 开发前仍需确认
+
+1. **优先兼容的录制 App**：系统相机、抖音、小红书、微信视频号、B 站或其他直播 App，需给出优先级，真机验证不能笼统覆盖“所有 App”。
+2. **语音路线的失败策略**：如果目标录制 App 抢占麦克风，是接受“这些 App 退回定速滚动”，还是转为 App 内置相机。
+3. **首发语言**：建议先只做普通话中文，英文混读可兼容；多语言会扩大识别和文本标准化测试面。
+4. **隐私边界**：建议优先端侧识别；设备或语言不支持端侧时，是明确报不可用，还是允许联网识别。
+5. **跟读行为**：停顿多久算暂停、重复上一句是否允许回退、主动跳段如何恢复，需要形成可验收规则。
+6. **最低系统版本**：当前已按上游文档统一为 iOS 17.0+；如果希望覆盖更老设备，需要明确提出并重新做 API 兼容检查。
+
 ## 本轮验证记录
 
-- 上游代码已完整导入，并保留原 Git 历史及 `upstream` 远程地址。
-- 所有 Swift 源文件通过语法解析。
-- 完整构建未完成：本机 Xcode 26.6 对应的 CoreSimulator 组件版本不一致；Firebase 二进制依赖下载还出现 TLS/超时错误。两项都属于当前开发环境/外部依赖问题，不能据此证明上游工程已经可运行。
+- 已创建 `giga-drill/cuecard` GitHub fork；本地 `origin` 指向个人 fork，`upstream` 指向作者仓库且禁用 push。
+- 已移除 Firebase、Google Sign-In、Analytics 和 Crashlytics；工程不再需要下载这些外部二进制依赖。
+- 已移除非公开的强制后台调用。
+- 已将 iOS 最低系统版本统一为 17.0。
+- 所有 Swift 源文件通过语法解析，工程 plist 通过格式校验。
+- CoreSimulator 框架版本不一致已修复，并已安装 Xcode 26.6 所需的 iOS 26.5 Simulator。
+- 清理后的工程已在 iPhone 17 / iOS 26.5 模拟器目标完整构建成功。
 - 尚未做真机 PiP 和双 App 麦克风验证；这是语音跟读路线 A 的明确前置条件。
 
 ## 参考

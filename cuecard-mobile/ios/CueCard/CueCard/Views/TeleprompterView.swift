@@ -1,7 +1,5 @@
 import SwiftUI
 import UIKit
-import FirebaseAnalytics
-import FirebaseCrashlytics
 
 struct TeleprompterView: View {
     let content: TeleprompterContent
@@ -176,10 +174,6 @@ struct TeleprompterView: View {
                 .onAppear {
                     viewHeight = geometry.size.height
                     setupPiP()
-                    Analytics.logEvent("teleprompter_started", parameters: [
-                        "word_count": content.words.count,
-                        "timer_duration": timerDuration
-                    ])
                 }
             }
             .navigationTitle("Teleprompter")
@@ -231,10 +225,10 @@ struct TeleprompterView: View {
             stopControlsTimer()
             stopCountdownTimer()
         }
-        .onChange(of: scenePhase) { newPhase in
+        .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .background && !pipManager.isPiPActive && pipManager.isPiPPossible {
                 // Auto-start PiP when app goes to background (like YouTube)
-                startPiP(minimizeApp: false)
+                startPiP()
             } else if newPhase == .active && pipManager.isPiPActive {
                 // Sync state when coming back to foreground
                 elapsedTime = pipManager.elapsedTime
@@ -307,7 +301,7 @@ struct TeleprompterView: View {
         }
     }
 
-    private func startPiP(minimizeApp: Bool = false) {
+    private func startPiP() {
         pipManager.updateState(
             elapsedTime: elapsedTime,
             isPlaying: isPlaying,
@@ -318,17 +312,16 @@ struct TeleprompterView: View {
         // Stop the view's timer — PiP manager has its own playback timer.
         // Running both causes dual writes to pipManager state and doubles CPU work.
         stopTimer()
-        pipManager.startPiP(minimizeApp: minimizeApp)
-        Analytics.logEvent("teleprompter_pip_started", parameters: nil)
+        pipManager.startPiP()
     }
 
     private func togglePiP() {
         if pipManager.isPiPActive {
             pipManager.stopPiP()
-            Analytics.logEvent("teleprompter_pip_stopped", parameters: nil)
         } else {
-            // Start PiP and minimize the app
-            startPiP(minimizeApp: true)
+            // iOS does not provide a public API for sending an app to the background.
+            // Start PiP here; the user can then switch to the camera or recording app.
+            startPiP()
         }
     }
 
@@ -380,7 +373,6 @@ struct TeleprompterView: View {
         isPlaying = true
         startTimer()
         pipManager.updateState(elapsedTime: elapsedTime, isPlaying: true, currentWordIndex: currentWordIndex)
-        Analytics.logEvent("teleprompter_play", parameters: nil)
         resetControlsTimer()
     }
 
@@ -395,7 +387,6 @@ struct TeleprompterView: View {
         isPlaying = false
         stopTimer()
         pipManager.updateState(elapsedTime: elapsedTime, isPlaying: false, currentWordIndex: currentWordIndex)
-        Analytics.logEvent("teleprompter_pause", parameters: nil)
     }
 
     private func restart() {
@@ -407,7 +398,6 @@ struct TeleprompterView: View {
         scrollOffset = 0
         isPlaying = false
         pipManager.updateState(elapsedTime: 0, isPlaying: false, currentWordIndex: 0)
-        Analytics.logEvent("teleprompter_restart", parameters: nil)
     }
 
     private func seekForward() {
@@ -442,9 +432,6 @@ struct TeleprompterView: View {
         stopTimer()
         stopCountdownTimer()
         pipManager.cleanup()
-        Analytics.logEvent("teleprompter_closed", parameters: [
-            "elapsed_time": Int(elapsedTime)
-        ])
         dismiss()
     }
 

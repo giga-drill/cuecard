@@ -81,7 +81,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     }
 
     /// Start PiP mode
-    func startPiP(minimizeApp: Bool = false) {
+    func startPiP() {
         guard let pipController = pipController else {
             print("PiP controller not available")
             return
@@ -93,18 +93,6 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         }
 
         pipController.startPictureInPicture()
-
-        if minimizeApp {
-            // Minimize the app after a short delay to let PiP start
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                self.minimizeApp()
-            }
-        }
-    }
-
-    /// Minimize the app to background
-    func minimizeApp() {
-        UIApplication.shared.perform(#selector(NSXPCConnection.suspend))
     }
 
     /// Expand from PiP - bring app back to foreground

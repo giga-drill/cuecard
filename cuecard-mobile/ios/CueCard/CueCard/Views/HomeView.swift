@@ -1,9 +1,6 @@
 import SwiftUI
-import FirebaseAnalytics
-import FirebaseCrashlytics
 
 struct HomeView: View {
-    @EnvironmentObject var authService: AuthenticationService
     @EnvironmentObject var settingsService: SettingsService
     @Environment(\.colorScheme) var colorScheme
     @State private var showingSettings = false
@@ -282,11 +279,6 @@ struct HomeView: View {
                 )
             }
         }
-        .onAppear {
-            Analytics.logEvent(AnalyticsEventScreenView, parameters: [
-                AnalyticsParameterScreenName: "home"
-            ])
-        }
     }
 }
 
@@ -436,7 +428,6 @@ struct SavedNotesView: View {
 
 #Preview {
     HomeView()
-        .environmentObject(AuthenticationService.shared)
         .environmentObject(SettingsService.shared)
 }
 
