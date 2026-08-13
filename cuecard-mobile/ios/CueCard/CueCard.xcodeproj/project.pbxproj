@@ -17,8 +17,30 @@
 		015 /* TeleprompterParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111 /* TeleprompterParser.swift */; };
 		016 /* TeleprompterPiPManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112 /* TeleprompterPiPManager.swift */; };
 		017 /* AppColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113 /* AppColors.swift */; };
+		018 /* OverlayLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114 /* OverlayLayout.swift */; };
+		B001 /* OverlayLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B101 /* OverlayLayoutTests.swift */; };
+		019 /* MandarinSpeechRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115 /* MandarinSpeechRecognitionService.swift */; };
+		B002 /* MandarinSpeechRecognitionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B103 /* MandarinSpeechRecognitionServiceTests.swift */; };
+		020 /* SpeechAudioSessionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116 /* SpeechAudioSessionCoordinator.swift */; };
+		B003 /* SpeechAudioSessionCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B104 /* SpeechAudioSessionCoordinatorTests.swift */; };
+		021 /* TeleprompterScrollMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117 /* TeleprompterScrollMode.swift */; };
+		B004 /* TeleprompterScrollModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B105 /* TeleprompterScrollModeTests.swift */; };
+		022 /* MandarinScriptAligner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 118 /* MandarinScriptAligner.swift */; };
+		B005 /* MandarinScriptAlignerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B106 /* MandarinScriptAlignerTests.swift */; };
+		023 /* VoiceScrollCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 119 /* VoiceScrollCoordinator.swift */; };
+		B006 /* VoiceScrollCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B107 /* VoiceScrollCoordinatorTests.swift */; };
 		AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B201 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1000 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 800;
+			remoteInfo = CueCard;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		101 /* CueCardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardApp.swift; sourceTree = "<group>"; };
@@ -31,13 +53,33 @@
 		111 /* TeleprompterParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterParser.swift; sourceTree = "<group>"; };
 		112 /* TeleprompterPiPManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterPiPManager.swift; sourceTree = "<group>"; };
 		113 /* AppColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColors.swift; sourceTree = "<group>"; };
+		114 /* OverlayLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayLayout.swift; sourceTree = "<group>"; };
+		115 /* MandarinSpeechRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MandarinSpeechRecognitionService.swift; sourceTree = "<group>"; };
+		116 /* SpeechAudioSessionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechAudioSessionCoordinator.swift; sourceTree = "<group>"; };
+		117 /* TeleprompterScrollMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterScrollMode.swift; sourceTree = "<group>"; };
+		118 /* MandarinScriptAligner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MandarinScriptAligner.swift; sourceTree = "<group>"; };
+		119 /* VoiceScrollCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceScrollCoordinator.swift; sourceTree = "<group>"; };
 		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		501 /* CueCard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B101 /* OverlayLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayLayoutTests.swift; sourceTree = "<group>"; };
+		B102 /* CueCardTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CueCardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B103 /* MandarinSpeechRecognitionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MandarinSpeechRecognitionServiceTests.swift; sourceTree = "<group>"; };
+		B104 /* SpeechAudioSessionCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechAudioSessionCoordinatorTests.swift; sourceTree = "<group>"; };
+		B105 /* TeleprompterScrollModeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterScrollModeTests.swift; sourceTree = "<group>"; };
+		B106 /* MandarinScriptAlignerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MandarinScriptAlignerTests.swift; sourceTree = "<group>"; };
+		B107 /* VoiceScrollCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceScrollCoordinatorTests.swift; sourceTree = "<group>"; };
 		AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassEffect.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		601 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B301 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -51,6 +93,7 @@
 			isa = PBXGroup;
 			children = (
 				710 /* CueCard */,
+				B400 /* CueCardTests */,
 				720 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -85,6 +128,8 @@
 			children = (
 				108 /* SettingsService.swift */,
 				112 /* TeleprompterPiPManager.swift */,
+				115 /* MandarinSpeechRecognitionService.swift */,
+				116 /* SpeechAudioSessionCoordinator.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -94,6 +139,10 @@
 			children = (
 				111 /* TeleprompterParser.swift */,
 				113 /* AppColors.swift */,
+				114 /* OverlayLayout.swift */,
+				117 /* TeleprompterScrollMode.swift */,
+				118 /* MandarinScriptAligner.swift */,
+				119 /* VoiceScrollCoordinator.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -102,8 +151,22 @@
 			isa = PBXGroup;
 			children = (
 				501 /* CueCard.app */,
+				B102 /* CueCardTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B400 /* CueCardTests */ = {
+			isa = PBXGroup;
+			children = (
+				B101 /* OverlayLayoutTests.swift */,
+				B103 /* MandarinSpeechRecognitionServiceTests.swift */,
+				B104 /* SpeechAudioSessionCoordinatorTests.swift */,
+				B105 /* TeleprompterScrollModeTests.swift */,
+				B106 /* MandarinScriptAlignerTests.swift */,
+				B107 /* VoiceScrollCoordinatorTests.swift */,
+			);
+			path = CueCardTests;
 			sourceTree = "<group>";
 		};
 		AA856D552F060DFC00B0CBC6 /* Modifiers */ = {
@@ -136,6 +199,24 @@
 			productReference = 501 /* CueCard.app */;
 			productType = "com.apple.product-type.application";
 		};
+		B500 /* CueCardTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B900 /* Build configuration list for PBXNativeTarget "CueCardTests" */;
+			buildPhases = (
+				B601 /* Sources */,
+				B301 /* Frameworks */,
+				B602 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B701 /* PBXTargetDependency */,
+			);
+			name = CueCardTests;
+			productName = CueCardTests;
+			productReference = B102 /* CueCardTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -148,6 +229,10 @@
 				TargetAttributes = {
 					800 = {
 						CreatedOnToolsVersion = 15.0;
+					};
+					B500 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = 800;
 					};
 				};
 			};
@@ -167,6 +252,7 @@
 			projectRoot = "";
 			targets = (
 				800 /* CueCard */,
+				B500 /* CueCardTests */,
 			);
 		};
 /* End PBXProject section */
@@ -180,6 +266,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B602 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -189,6 +282,12 @@
 			files = (
 				001 /* CueCardApp.swift in Sources */,
 				017 /* AppColors.swift in Sources */,
+				018 /* OverlayLayout.swift in Sources */,
+				019 /* MandarinSpeechRecognitionService.swift in Sources */,
+				020 /* SpeechAudioSessionCoordinator.swift in Sources */,
+				021 /* TeleprompterScrollMode.swift in Sources */,
+				022 /* MandarinScriptAligner.swift in Sources */,
+				023 /* VoiceScrollCoordinator.swift in Sources */,
 				002 /* ContentView.swift in Sources */,
 				004 /* HomeView.swift in Sources */,
 				008 /* SettingsService.swift in Sources */,
@@ -200,7 +299,28 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B601 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B001 /* OverlayLayoutTests.swift in Sources */,
+				B002 /* MandarinSpeechRecognitionServiceTests.swift in Sources */,
+				B003 /* SpeechAudioSessionCoordinatorTests.swift in Sources */,
+				B004 /* TeleprompterScrollModeTests.swift in Sources */,
+				B005 /* MandarinScriptAlignerTests.swift in Sources */,
+				B006 /* VoiceScrollCoordinatorTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B701 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 800 /* CueCard */;
+			targetProxy = B201 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A01 /* Debug */ = {
@@ -388,6 +508,43 @@
 			};
 			name = Release;
 		};
+		B801 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gigadrill.cuecardTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CueCard.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CueCard";
+			};
+			name = Debug;
+		};
+		B802 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gigadrill.cuecardTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CueCard.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CueCard";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -405,6 +562,15 @@
 			buildConfigurations = (
 				A03 /* Debug */,
 				A04 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B900 /* Build configuration list for PBXNativeTarget "CueCardTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B801 /* Debug */,
+				B802 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

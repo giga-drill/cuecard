@@ -8,6 +8,7 @@ struct TeleprompterView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
     @StateObject private var pipManager = TeleprompterPiPManager.shared
+    @StateObject private var speechService = MandarinSpeechRecognitionService()
 
     @State private var isPlaying = false
     @State private var scrollOffset: CGFloat = 0
@@ -24,7 +25,19 @@ struct TeleprompterView: View {
     @State private var countdownValue: Int = 0
     @State private var isCountingDown = false
     @State private var countdownTimer: Timer?
+    @State private var scrollModeState = TeleprompterScrollModeState()
+    @State private var voiceScrollTimer: Timer?
+    @State private var voiceScrollProgress: Double = 0
+    @State private var scriptAligner: MandarinScriptAligner
+    @State private var voiceScrollCoordinator: VoiceScrollCoordinator
     @Environment(\.scenePhase) private var scenePhase
+
+    init(content: TeleprompterContent, settings: TeleprompterSettings) {
+        self.content = content
+        self.settings = settings
+        _scriptAligner = State(initialValue: MandarinScriptAligner(script: content.fullText))
+        _voiceScrollCoordinator = State(initialValue: VoiceScrollCoordinator())
+    }
 
     // Timer properties
     private var timerDuration: Int { settings.timerDurationSeconds }
@@ -84,6 +97,7 @@ struct TeleprompterView: View {
                         colorScheme: colorScheme,
                         topPadding: geometry.size.height * 0.4,
                         bottomPadding: geometry.size.height * 0.6,
+                        scrollProgress: scrollModeState.mode == .voiceFollowing ? voiceScrollProgress : nil,
                         onTap: {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 showControls.toggle()
@@ -170,10 +184,31 @@ struct TeleprompterView: View {
                         .transition(.opacity)
                     }
 
+                    VStack {
+                        HStack {
+                            Label(scrollModeState.mode.title, systemImage: scrollModeState.mode.systemImage)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(.ultraThinMaterial, in: Capsule())
+                                .accessibilityIdentifier("scroll-mode-indicator")
+                            Spacer()
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                        Spacer()
+                    }
+
                 }
                 .onAppear {
                     viewHeight = geometry.size.height
                     setupPiP()
+                    pipManager.updateOverlayOrientation(for: geometry.size)
+                }
+                .onChange(of: geometry.size) { _, newSize in
+                    viewHeight = newSize.height
+                    pipManager.updateOverlayOrientation(for: newSize)
                 }
             }
             .navigationTitle("Teleprompter")
@@ -224,12 +259,17 @@ struct TeleprompterView: View {
             stopTimer()
             stopControlsTimer()
             stopCountdownTimer()
+            stopVoiceScrollTimer()
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .background && !pipManager.isPiPActive && pipManager.isPiPPossible {
+                SpeechDiagnostics.shared.record(.appBackgrounded)
                 // Auto-start PiP when app goes to background (like YouTube)
-                startPiP()
+                beginPiP()
+            } else if newPhase == .background {
+                SpeechDiagnostics.shared.record(.appBackgrounded)
             } else if newPhase == .active && pipManager.isPiPActive {
+                SpeechDiagnostics.shared.record(.appForegrounded)
                 // Sync state when coming back to foreground
                 elapsedTime = pipManager.elapsedTime
                 isPlaying = pipManager.isPlaying
@@ -299,9 +339,65 @@ struct TeleprompterView: View {
                 startTimer()
             }
         }
+
+        speechService.onStateChange = { state in
+            let previousMode = scrollModeState.mode
+            let progressBeforeChange = currentReadingProgress(for: previousMode)
+            scrollModeState.apply(state)
+            let newMode = scrollModeState.mode
+            pipManager.updateScrollMode(newMode)
+
+            guard newMode != previousMode else { return }
+            if newMode == .voiceFollowing {
+                stopTimer()
+                scriptAligner.reset(to: progressBeforeChange)
+                voiceScrollCoordinator.reset(to: progressBeforeChange)
+                voiceScrollProgress = progressBeforeChange
+                pipManager.updateVoiceScrollProgress(progressBeforeChange)
+                startVoiceScrollTimer()
+            } else if isPlaying && !pipManager.isPiPActive {
+                stopVoiceScrollTimer()
+                elapsedTime = progressBeforeChange * estimatedReadDuration
+                updateCurrentWord()
+                startTimer()
+            } else {
+                stopVoiceScrollTimer()
+                elapsedTime = progressBeforeChange * estimatedReadDuration
+                pipManager.updateState(
+                    elapsedTime: elapsedTime,
+                    isPlaying: isPlaying,
+                    currentWordIndex: currentWordIndex
+                )
+            }
+
+            if newMode == .fixedSpeed {
+                SpeechDiagnostics.shared.record(.fallbackToFixedSpeed, details: [
+                    "reason": String(describing: scrollModeState.fallbackReason)
+                ])
+            }
+        }
+
+        speechService.onPartialTranscript = { transcript in
+            voiceScrollCoordinator.noteSpeechActivity()
+            if let alignment = scriptAligner.align(recognitionText: transcript) {
+                voiceScrollCoordinator.receive(alignment)
+                SpeechDiagnostics.shared.record(.voiceAlignment, details: [
+                    "progress": String(format: "%.4f", alignment.progress),
+                    "confidence": String(format: "%.3f", alignment.confidence)
+                ])
+            }
+        }
     }
 
     private func startPiP() {
+        Task { @MainActor in
+            _ = await speechService.startRecognition()
+            beginPiP()
+        }
+    }
+
+    private func beginPiP() {
+        pipManager.updateScrollMode(scrollModeState.mode)
         pipManager.updateState(
             elapsedTime: elapsedTime,
             isPlaying: isPlaying,
@@ -432,6 +528,8 @@ struct TeleprompterView: View {
         stopTimer()
         stopCountdownTimer()
         pipManager.cleanup()
+        speechService.stopRecognition()
+        stopVoiceScrollTimer()
         dismiss()
     }
 
@@ -460,6 +558,41 @@ struct TeleprompterView: View {
         timer?.invalidate()
         timer = nil
         timerStartDate = nil  // Prevents stale Task blocks from writing elapsedTime
+    }
+
+    private var estimatedReadDuration: Double {
+        let wordsPerSecond = max(Double(settings.wordsPerMinute) / 60, 0.01)
+        let normalizedCount = MandarinTextNormalizer.normalize(content.fullText).count
+        let unitCount = content.words.count <= 1
+            ? max(normalizedCount, content.words.count)
+            : content.words.count
+        return Double(max(unitCount, 1)) / wordsPerSecond
+    }
+
+    private func currentReadingProgress(for mode: TeleprompterScrollMode) -> Double {
+        if mode == .voiceFollowing {
+            return voiceScrollProgress
+        }
+        return min(max(elapsedTime / estimatedReadDuration, 0), 1)
+    }
+
+    private func startVoiceScrollTimer() {
+        stopVoiceScrollTimer()
+        let timer = Timer(timeInterval: 1.0 / 30.0, repeats: true) { _ in
+            Task { @MainActor in
+                guard scrollModeState.mode == .voiceFollowing else { return }
+                let progress = voiceScrollCoordinator.tick()
+                voiceScrollProgress = progress
+                pipManager.updateVoiceScrollProgress(progress)
+            }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        voiceScrollTimer = timer
+    }
+
+    private func stopVoiceScrollTimer() {
+        voiceScrollTimer?.invalidate()
+        voiceScrollTimer = nil
     }
 
     private func updateCurrentWord() {
@@ -502,6 +635,7 @@ struct AttributedTextView: UIViewRepresentable {
     let colorScheme: ColorScheme
     let topPadding: CGFloat
     let bottomPadding: CGFloat
+    let scrollProgress: Double?
     let onTap: (() -> Void)?
 
     func makeCoordinator() -> Coordinator {
@@ -569,7 +703,17 @@ struct AttributedTextView: UIViewRepresentable {
             context.coordinator.lastProgressBucket = progressBucket
         }
 
-        // Auto-scroll to current word
+        if let scrollProgress {
+            let maxY = max(0, textView.contentSize.height - textView.bounds.height)
+            let targetY = min(max(scrollProgress, 0), 1) * maxY
+            let currentY = textView.contentOffset.y
+            let delta = targetY - currentY
+            let nextY = abs(delta) < 0.5 ? targetY : currentY + delta * 0.25
+            textView.setContentOffset(CGPoint(x: 0, y: nextY), animated: false)
+            return
+        }
+
+        // Auto-scroll to current word in fixed-speed mode.
         if currentWordIndex > 0 {
             let wordRanges = getWordRanges()
             if currentWordIndex < wordRanges.count {

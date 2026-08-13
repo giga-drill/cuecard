@@ -6,24 +6,14 @@ CueCard Teleprompter keeps your speaker notes visible above any app, so you can 
 
 | Platform | Bundle ID |
 |----------|-----------|
-| iOS | `com.thisisnsh.cuecard.ios` |
+| iOS fork | `com.gigadrill.cuecard` |
 | Android | `com.thisisnsh.cuecard.android` |
 
 ## Firebase Setup
 
-Both apps require Firebase configuration files. Download these from the [Firebase Console](https://console.firebase.google.com):
+The iOS fork is local-first and no longer uses Firebase, Google Sign-In, Analytics, or Crashlytics. Its notes and settings remain on the device.
 
-### iOS Setup
-
-1. Go to Firebase Console → Project Settings → Your Apps
-2. Add an iOS app with bundle ID: `com.thisisnsh.cuecard.ios`
-3. Download `GoogleService-Info.plist`
-4. Replace `ios/CueCard/CueCard/GoogleService-Info.plist` with the downloaded file
-5. Add URL scheme for Google Sign-In:
-   - Copy `REVERSED_CLIENT_ID` from `GoogleService-Info.plist`
-   - It's already configured in `Info.plist` via `$(REVERSED_CLIENT_ID)`
-
-### Android Setup
+### Android Firebase Setup
 
 1. Go to Firebase Console → Project Settings → Your Apps
 2. Add an Android app with package name: `com.thisisnsh.cuecard.android`
@@ -59,6 +49,8 @@ open ios/CueCard/CueCard.xcodeproj
 cd ios/CueCard
 xcodebuild -scheme CueCard -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
 ```
+
+The iOS fork currently includes portrait/landscape PiP, Mandarin on-device voice following, local script alignment, smooth voice-driven scrolling, and automatic fallback to fixed-speed scrolling. Apple Camera microphone coexistence still requires the manual real-device checklist in [`../docs/real-device-test-checklist.md`](../docs/real-device-test-checklist.md).
 
 ### Android
 

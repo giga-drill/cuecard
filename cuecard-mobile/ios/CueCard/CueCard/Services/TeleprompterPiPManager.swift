@@ -12,6 +12,8 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     @Published var isPiPActive = false
     @Published var isPiPPossible = false
     @Published var isPlaying = false
+    @Published private(set) var overlayOrientation: OverlayOrientation = .portrait
+    @Published private(set) var scrollMode: TeleprompterScrollMode = .fixedSpeed
 
     // MARK: - Content Properties
 
@@ -23,6 +25,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     private(set) var totalWords: Int = 0
     private(set) var countdownValue: Int = 0
     private(set) var isCountingDown: Bool = false
+    private(set) var voiceScrollProgress: Double = 0
 
     // MARK: - PiP Components
 
@@ -31,6 +34,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     private var teleprompterContentView: TeleprompterPiPContentView?
     private var pipContentView: TeleprompterPiPContentView?
     private var pipWindow: UIWindow?
+    private var isObservingDeviceOrientation = false
 
     // MARK: - Timers
 
@@ -66,9 +70,46 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         self.isDarkMode = colorScheme == .dark
 
         let parsedContent = TeleprompterParser.parseNotes(text)
-        totalWords = parsedContent.words.count
+        let normalizedCharacterCount = MandarinTextNormalizer.normalize(text).count
+        totalWords = parsedContent.words.count <= 1
+            ? max(normalizedCharacterCount, parsedContent.words.count)
+            : parsedContent.words.count
+
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+            overlayOrientation = windowScene.interfaceOrientation.isLandscape ? .landscape : .portrait
+        } else {
+            overlayOrientation = .portrait
+        }
 
         setupPiP()
+    }
+
+    /// Update only the PiP geometry. Playback and reading progress remain untouched.
+    func updateOverlayOrientation(for size: CGSize) {
+        updateOverlayOrientation(OverlayLayout.orientation(for: size, previous: overlayOrientation))
+    }
+
+    /// Switch scrolling engines without changing elapsed time or reading progress.
+    func updateScrollMode(_ newMode: TeleprompterScrollMode) {
+        guard newMode != scrollMode else { return }
+        scrollMode = newMode
+
+        switch newMode {
+        case .voiceFollowing:
+            stopPlaybackTimer()
+        case .fixedSpeed:
+            if isPlaying && isPiPActive {
+                startPlaybackTimer()
+            }
+        }
+        needsContentViewUpdate = true
+    }
+
+    func updateVoiceScrollProgress(_ progress: Double) {
+        voiceScrollProgress = min(max(progress, 0), 1)
+        if scrollMode == .voiceFollowing {
+            needsContentViewUpdate = true
+        }
     }
 
     /// Update current state from TeleprompterView
@@ -136,7 +177,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     }
 
     @objc private func handlePlaybackTimerTick() {
-        guard isPlaying, let startDate = playbackTimerStartDate else { return }
+        guard scrollMode == .fixedSpeed, isPlaying, let startDate = playbackTimerStartDate else { return }
         elapsedTime = elapsedTimeAtPlaybackStart + Date().timeIntervalSince(startDate)
         // Keep PiP motion smooth by rendering every playback tick.
         needsContentViewUpdate = true
@@ -183,6 +224,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
 
     /// Cleanup resources
     func cleanup() {
+        stopOrientationObservation()
         stopDisplayLink()
         stopPlaybackTimer()
         pipController?.stopPictureInPicture()
@@ -211,17 +253,11 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             return
         }
 
-        let screenBounds = windowScene.screen.bounds
-        let maxWidth = screenBounds.width
-        let maxHeight = screenBounds.height
-        let ratio = settings.overlayAspectRatio.ratio
-        var preferredWidth = maxWidth
-        var preferredHeight = preferredWidth / ratio
-        if preferredHeight > maxHeight {
-            preferredHeight = maxHeight
-            preferredWidth = preferredHeight * ratio
-        }
-        let preferredSize = CGSize(width: preferredWidth, height: preferredHeight)
+        let preferredSize = OverlayLayout.preferredContentSize(
+            in: windowScene.screen.bounds,
+            baseLandscapeRatio: settings.overlayAspectRatio.ratio,
+            orientation: overlayOrientation
+        )
         let pipWidth = preferredSize.width
         let pipHeight = preferredSize.height
 
@@ -277,6 +313,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         controller.delegate = self
         controller.canStartPictureInPictureAutomaticallyFromInline = true
         self.pipController = controller
+        startOrientationObservation()
 
         // Check if PiP is possible after setup
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
@@ -286,6 +323,63 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         // Start rendering
         startDisplayLink()
         updateContentView()
+    }
+
+    private func updateOverlayOrientation(_ newOrientation: OverlayOrientation) {
+        guard newOrientation != overlayOrientation else { return }
+        overlayOrientation = newOrientation
+        applyPreferredContentSize()
+    }
+
+    private func applyPreferredContentSize() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
+        let preferredSize = OverlayLayout.preferredContentSize(
+            in: windowScene.screen.bounds,
+            baseLandscapeRatio: settings.overlayAspectRatio.ratio,
+            orientation: overlayOrientation
+        )
+
+        pipViewController?.preferredContentSize = preferredSize
+        pipWindow?.frame.size = preferredSize
+        teleprompterContentView?.frame.size = preferredSize
+        pipViewController?.view.setNeedsLayout()
+        teleprompterContentView?.setNeedsLayout()
+        pipContentView?.setNeedsLayout()
+        needsContentViewUpdate = true
+    }
+
+    private func startOrientationObservation() {
+        guard !isObservingDeviceOrientation else { return }
+        UIDevice.current.beginGeneratingDeviceOrientationNotifications()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleDeviceOrientationChange),
+            name: UIDevice.orientationDidChangeNotification,
+            object: nil
+        )
+        isObservingDeviceOrientation = true
+    }
+
+    private func stopOrientationObservation() {
+        guard isObservingDeviceOrientation else { return }
+        NotificationCenter.default.removeObserver(
+            self,
+            name: UIDevice.orientationDidChangeNotification,
+            object: nil
+        )
+        UIDevice.current.endGeneratingDeviceOrientationNotifications()
+        isObservingDeviceOrientation = false
+    }
+
+    @objc private func handleDeviceOrientationChange() {
+        switch UIDevice.current.orientation {
+        case .portrait, .portraitUpsideDown:
+            updateOverlayOrientation(.portrait)
+        case .landscapeLeft, .landscapeRight:
+            updateOverlayOrientation(.landscape)
+        default:
+            break
+        }
     }
 
     // MARK: - Content Rendering
@@ -324,7 +418,8 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             elapsedTime: elapsedTime,
             totalWords: totalWords,
             wordsPerMinute: settings.wordsPerMinute,
-            isCountingDown: isCountingDown
+            isCountingDown: isCountingDown,
+            voiceScrollProgress: scrollMode == .voiceFollowing ? voiceScrollProgress : nil
         )
 
         pipContentView?.update(
@@ -337,7 +432,8 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             elapsedTime: elapsedTime,
             totalWords: totalWords,
             wordsPerMinute: settings.wordsPerMinute,
-            isCountingDown: isCountingDown
+            isCountingDown: isCountingDown,
+            voiceScrollProgress: scrollMode == .voiceFollowing ? voiceScrollProgress : nil
         )
     }
 
@@ -352,7 +448,7 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
         Task { @MainActor in
             isPiPActive = true
             // Start playback timer if already playing when PiP starts
-            if isPlaying {
+            if isPlaying && scrollMode == .fixedSpeed {
                 startPlaybackTimer()
             }
         }
@@ -361,6 +457,7 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
     nonisolated func pictureInPictureControllerDidStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         Task { @MainActor in
             isPiPActive = true
+            SpeechDiagnostics.shared.record(.pipStarted)
         }
     }
 
@@ -373,6 +470,7 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
     nonisolated func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         Task { @MainActor in
             isPiPActive = false
+            SpeechDiagnostics.shared.record(.pipStopped)
             onPiPClosed?()
         }
     }
@@ -510,7 +608,8 @@ private class TeleprompterPiPContentView: UIView {
         elapsedTime: Double,
         totalWords: Int,
         wordsPerMinute: Int,
-        isCountingDown: Bool = false
+        isCountingDown: Bool = false,
+        voiceScrollProgress: Double? = nil
     ) {
         let needsFullRebuild = lastContentId != text
 
@@ -522,7 +621,13 @@ private class TeleprompterPiPContentView: UIView {
         }
 
         // Continuous time-based scroll
-        updateContinuousScroll(elapsedTime: elapsedTime, totalWords: totalWords, wordsPerMinute: wordsPerMinute, snap: needsFullRebuild)
+        updateContinuousScroll(
+            elapsedTime: elapsedTime,
+            totalWords: totalWords,
+            wordsPerMinute: wordsPerMinute,
+            voiceScrollProgress: voiceScrollProgress,
+            snap: needsFullRebuild
+        )
 
         timerLabel.text = " \(timerText) "
         if isCountingDown {
@@ -537,12 +642,19 @@ private class TeleprompterPiPContentView: UIView {
         timerLabel.backgroundColor = (isDarkMode ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background).withAlphaComponent(0.8)
     }
 
-    private func updateContinuousScroll(elapsedTime: Double, totalWords: Int, wordsPerMinute: Int, snap: Bool) {
+    private func updateContinuousScroll(
+        elapsedTime: Double,
+        totalWords: Int,
+        wordsPerMinute: Int,
+        voiceScrollProgress: Double?,
+        snap: Bool
+    ) {
         guard totalWords > 0, wordsPerMinute > 0 else { return }
 
         let wordsPerSecond = Double(wordsPerMinute) / 60.0
         let totalReadDuration = Double(totalWords) / wordsPerSecond
-        let scrollFraction = min(max(elapsedTime / totalReadDuration, 0), 1)
+        let fixedSpeedProgress = min(max(elapsedTime / totalReadDuration, 0), 1)
+        let scrollFraction = voiceScrollProgress.map { min(max($0, 0), 1) } ?? fixedSpeedProgress
         let maxY = max(0, textView.contentSize.height - textView.bounds.height)
         let targetY = scrollFraction * maxY
 
