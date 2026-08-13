@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct CueCardApp: App {
+struct FloatCueApp: App {
     @StateObject private var settingsService = SettingsService.shared
 
     var body: some Scene {
@@ -17,7 +17,7 @@ struct CueCardApp: App {
 struct AnalyticsEvents {
     static func logButtonClick(_ buttonName: String, screen: String, parameters: [String: Any]? = nil) {
         #if DEBUG
-        print("[CueCard] button=\(buttonName) screen=\(screen) parameters=\(parameters ?? [:])")
+        print("[FloatCue] button=\(buttonName) screen=\(screen) parameters=\(parameters ?? [:])")
         #endif
     }
 }

@@ -196,10 +196,10 @@ class SettingsService: ObservableObject {
     static let shared = SettingsService()
 
     private let userDefaults = UserDefaults.standard
-    private let settingsKey = "cuecard_settings"
-    private let notesKey = "cuecard_notes"
-    private let savedNotesKey = "cuecard_saved_notes"
-    private let currentNoteIdKey = "cuecard_current_note_id"
+    private let settingsKey = "floatcue_settings"
+    private let notesKey = "floatcue_notes"
+    private let savedNotesKey = "floatcue_saved_notes"
+    private let currentNoteIdKey = "floatcue_current_note_id"
     private var isLoadingNote = false
 
     @Published var settings: TeleprompterSettings {
@@ -236,7 +236,7 @@ class SettingsService: ObservableObject {
     static let defaultNoteText = """
 Welcome everyone.
 
-I'm excited to be here today to talk about CueCard.
+I'm excited to be here today to talk about FloatCue.
 
 [note smile and pause]
 

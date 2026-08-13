@@ -1,4 +1,4 @@
-# CueCard iOS 新功能实现与验证状态
+# FloatCue iOS 新功能实现与验证状态
 
 评估日期：2026-08-12  
 实现更新：2026-08-13
@@ -10,11 +10,11 @@
 
 横竖屏布局、普通话端侧识别、中文文稿对齐、语音平滑滚动和失败后定速降级均已实现。29 项单元测试已在 iPhone 17 / iOS 26.5 Simulator 全部通过，模拟器完整构建和 arm64 真机 Debug 编译也已通过。
 
-仍未验证的系统边界只有真实 iPhone 上的跨 App 行为：CueCard 进入 PiP 后在后台读取麦克风，同时 Apple 系统相机录像时是否能持续共存。iOS 是否中断麦克风取决于双方的音频会话类别、混音选项、激活时机和具体设备，并非系统相机必然抢占；已有上架产品证明该产品形态能够落地，但 Apple 没有公开保证所有机型都能稳定共存。
+仍未验证的系统边界只有真实 iPhone 上的跨 App 行为：FloatCue 进入 PiP 后在后台读取麦克风，同时 Apple 系统相机录像时是否能持续共存。iOS 是否中断麦克风取决于双方的音频会话类别、混音选项、激活时机和具体设备，并非系统相机必然抢占；已有上架产品证明该产品形态能够落地，但 Apple 没有公开保证所有机型都能稳定共存。
 
 此前按照代码行数和传统人工团队给出的“人日/周”估算不适用于智能体直接开发，已经从本文删除。剩余工作不再按代码量估算：连接真实 iPhone 后执行测试矩阵，成功则确认语音跟读，失败则确认约一秒内自动退回定速滚动。
 
-## 当前 CueCard iOS 实现
+## 当前 FloatCue iOS 实现
 
 - 原生 SwiftUI/UIKit 工程，目标为 iPhone 和 iPad。
 - 悬浮窗使用 `AVPictureInPictureVideoCallViewController`。
@@ -25,7 +25,7 @@
 - 语音识别固定 `zh-CN`，启动前检查端侧能力并强制 `requiresOnDeviceRecognition = true`，不存在联网后备路径。
 - 音频会话使用 `playAndRecord + measurement + mixWithOthers`，并记录 session、buffer、识别、PiP、后台、中断、路由、匹配和降级事件。
 - 中文对齐采用简繁/全半角/标点标准化、字符级编辑距离、连续命中、局部性、向前偏好和弱拼音辅助。
-- 已新增 `CueCardTests` 单元测试 target，共 29 项测试。
+- 已新增 `FloatCueTests` 单元测试 target，共 29 项测试。
 
 ## 基线运行风险
 

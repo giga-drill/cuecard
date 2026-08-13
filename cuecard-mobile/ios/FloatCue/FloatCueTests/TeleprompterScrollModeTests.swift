@@ -1,5 +1,5 @@
 import XCTest
-@testable import CueCard
+@testable import FloatCue
 
 final class TeleprompterScrollModeTests: XCTestCase {
     func testListeningEnablesVoiceFollowing() {

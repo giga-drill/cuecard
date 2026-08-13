@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		001 /* CueCardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101 /* CueCardApp.swift */; };
+		001 /* FloatCueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101 /* FloatCueApp.swift */; };
 		002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102 /* ContentView.swift */; };
 		004 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 104 /* HomeView.swift */; };
 		007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 201 /* Assets.xcassets */; };
@@ -38,12 +38,12 @@
 			containerPortal = 1000 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 800;
-			remoteInfo = CueCard;
+			remoteInfo = FloatCue;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		101 /* CueCardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardApp.swift; sourceTree = "<group>"; };
+		101 /* FloatCueApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatCueApp.swift; sourceTree = "<group>"; };
 		102 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		104 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		107 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -60,9 +60,9 @@
 		118 /* MandarinScriptAligner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MandarinScriptAligner.swift; sourceTree = "<group>"; };
 		119 /* VoiceScrollCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceScrollCoordinator.swift; sourceTree = "<group>"; };
 		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		501 /* CueCard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		501 /* FloatCue.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FloatCue.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B101 /* OverlayLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayLayoutTests.swift; sourceTree = "<group>"; };
-		B102 /* CueCardTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CueCardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B102 /* FloatCueTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FloatCueTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B103 /* MandarinSpeechRecognitionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MandarinSpeechRecognitionServiceTests.swift; sourceTree = "<group>"; };
 		B104 /* SpeechAudioSessionCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechAudioSessionCoordinatorTests.swift; sourceTree = "<group>"; };
 		B105 /* TeleprompterScrollModeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterScrollModeTests.swift; sourceTree = "<group>"; };
@@ -92,16 +92,16 @@
 		700 = {
 			isa = PBXGroup;
 			children = (
-				710 /* CueCard */,
-				B400 /* CueCardTests */,
+				710 /* FloatCue */,
+				B400 /* FloatCueTests */,
 				720 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		710 /* CueCard */ = {
+		710 /* FloatCue */ = {
 			isa = PBXGroup;
 			children = (
-				101 /* CueCardApp.swift */,
+				101 /* FloatCueApp.swift */,
 				AA856D552F060DFC00B0CBC6 /* Modifiers */,
 				711 /* Views */,
 				712 /* Services */,
@@ -109,7 +109,7 @@
 				107 /* Info.plist */,
 				201 /* Assets.xcassets */,
 			);
-			path = CueCard;
+			path = FloatCue;
 			sourceTree = "<group>";
 		};
 		711 /* Views */ = {
@@ -150,13 +150,13 @@
 		720 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				501 /* CueCard.app */,
-				B102 /* CueCardTests.xctest */,
+				501 /* FloatCue.app */,
+				B102 /* FloatCueTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		B400 /* CueCardTests */ = {
+		B400 /* FloatCueTests */ = {
 			isa = PBXGroup;
 			children = (
 				B101 /* OverlayLayoutTests.swift */,
@@ -166,7 +166,7 @@
 				B106 /* MandarinScriptAlignerTests.swift */,
 				B107 /* VoiceScrollCoordinatorTests.swift */,
 			);
-			path = CueCardTests;
+			path = FloatCueTests;
 			sourceTree = "<group>";
 		};
 		AA856D552F060DFC00B0CBC6 /* Modifiers */ = {
@@ -180,9 +180,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		800 /* CueCard */ = {
+		800 /* FloatCue */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 900 /* Build configuration list for PBXNativeTarget "CueCard" */;
+			buildConfigurationList = 900 /* Build configuration list for PBXNativeTarget "FloatCue" */;
 			buildPhases = (
 				801 /* Sources */,
 				601 /* Frameworks */,
@@ -192,16 +192,16 @@
 			);
 			dependencies = (
 			);
-			name = CueCard;
+			name = FloatCue;
 			packageProductDependencies = (
 			);
-			productName = CueCard;
-			productReference = 501 /* CueCard.app */;
+			productName = FloatCue;
+			productReference = 501 /* FloatCue.app */;
 			productType = "com.apple.product-type.application";
 		};
-		B500 /* CueCardTests */ = {
+		B500 /* FloatCueTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B900 /* Build configuration list for PBXNativeTarget "CueCardTests" */;
+			buildConfigurationList = B900 /* Build configuration list for PBXNativeTarget "FloatCueTests" */;
 			buildPhases = (
 				B601 /* Sources */,
 				B301 /* Frameworks */,
@@ -212,9 +212,9 @@
 			dependencies = (
 				B701 /* PBXTargetDependency */,
 			);
-			name = CueCardTests;
-			productName = CueCardTests;
-			productReference = B102 /* CueCardTests.xctest */;
+			name = FloatCueTests;
+			productName = FloatCueTests;
+			productReference = B102 /* FloatCueTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -236,7 +236,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 1001 /* Build configuration list for PBXProject "CueCard" */;
+			buildConfigurationList = 1001 /* Build configuration list for PBXProject "FloatCue" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -251,8 +251,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				800 /* CueCard */,
-				B500 /* CueCardTests */,
+				800 /* FloatCue */,
+				B500 /* FloatCueTests */,
 			);
 		};
 /* End PBXProject section */
@@ -280,7 +280,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				001 /* CueCardApp.swift in Sources */,
+				001 /* FloatCueApp.swift in Sources */,
 				017 /* AppColors.swift in Sources */,
 				018 /* OverlayLayout.swift in Sources */,
 				019 /* MandarinSpeechRecognitionService.swift in Sources */,
@@ -317,7 +317,7 @@
 /* Begin PBXTargetDependency section */
 		B701 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 800 /* CueCard */;
+			target = 800 /* FloatCue */;
 			targetProxy = B201 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -452,8 +452,8 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = CueCard/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
+				INFOPLIST_FILE = FloatCue/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FloatCue;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
@@ -463,7 +463,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.2.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.gigadrill.cuecard;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gigadrill.floatcue;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -485,8 +485,8 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = CueCard/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
+				INFOPLIST_FILE = FloatCue/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FloatCue;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
@@ -496,7 +496,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.2.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.gigadrill.cuecard;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gigadrill.floatcue;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -516,14 +516,14 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.gigadrill.cuecardTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gigadrill.floatcue.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CueCard.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CueCard";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FloatCue.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FloatCue";
 			};
 			name = Debug;
 		};
@@ -535,20 +535,20 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.gigadrill.cuecardTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gigadrill.floatcue.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CueCard.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CueCard";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FloatCue.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FloatCue";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1001 /* Build configuration list for PBXProject "CueCard" */ = {
+		1001 /* Build configuration list for PBXProject "FloatCue" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A01 /* Debug */,
@@ -557,7 +557,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		900 /* Build configuration list for PBXNativeTarget "CueCard" */ = {
+		900 /* Build configuration list for PBXNativeTarget "FloatCue" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A03 /* Debug */,
@@ -566,7 +566,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		B900 /* Build configuration list for PBXNativeTarget "CueCardTests" */ = {
+		B900 /* Build configuration list for PBXNativeTarget "FloatCueTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B801 /* Debug */,

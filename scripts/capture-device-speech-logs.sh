@@ -13,11 +13,11 @@ timestamp=$(date '+%Y%m%d-%H%M%S')
 output_log=${2:-"$repo_root/artifacts/device-tests/speech-$timestamp.log"}
 
 mkdir -p "${output_log:h}"
-print "Capturing CueCard diagnostics to: $output_log"
+print "Capturing FloatCue diagnostics to: $output_log"
 print "Leave this running, perform the checklist on the iPhone, then press Control-C."
 
 xcrun devicectl device process launch \
   --device "$device_id" \
   --terminate-existing \
   --console \
-  com.gigadrill.cuecard 2>&1 | tee "$output_log"
+  com.gigadrill.floatcue 2>&1 | tee "$output_log"

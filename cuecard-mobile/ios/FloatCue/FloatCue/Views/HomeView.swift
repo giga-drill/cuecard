@@ -191,7 +191,7 @@ struct HomeView: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 24)
             }
-            .navigationTitle("CueCard")
+            .navigationTitle("FloatCue")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(AppColors.background(for: colorScheme), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)

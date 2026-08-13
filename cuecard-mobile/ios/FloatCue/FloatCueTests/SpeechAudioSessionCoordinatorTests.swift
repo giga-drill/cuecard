@@ -1,6 +1,6 @@
 import AVFoundation
 import XCTest
-@testable import CueCard
+@testable import FloatCue
 
 final class SpeechAudioSessionCoordinatorTests: XCTestCase {
     func testBufferMonitorThrottlesDiagnosticsButTracksLatestBuffer() {

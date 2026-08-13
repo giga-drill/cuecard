@@ -46,7 +46,7 @@ final class SpeechDiagnostics: ObservableObject {
     static let shared = SpeechDiagnostics()
 
     @Published private(set) var events: [SpeechDiagnosticEvent] = []
-    private let logger = Logger(subsystem: "com.gigadrill.cuecard", category: "SpeechDiagnostics")
+    private let logger = Logger(subsystem: "com.gigadrill.floatcue", category: "SpeechDiagnostics")
 
     func record(_ kind: SpeechDiagnosticKind, details: [String: String] = [:]) {
         let event = SpeechDiagnosticEvent(kind: kind, details: details)

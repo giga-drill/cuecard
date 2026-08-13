@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "800"
-               BuildableName = "CueCard.app"
-               BlueprintName = "CueCard"
-               ReferencedContainer = "container:CueCard.xcodeproj">
+               BuildableName = "FloatCue.app"
+               BlueprintName = "FloatCue"
+               ReferencedContainer = "container:FloatCue.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -30,9 +30,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "B500"
-               BuildableName = "CueCardTests.xctest"
-               BlueprintName = "CueCardTests"
-               ReferencedContainer = "container:CueCard.xcodeproj">
+               BuildableName = "FloatCueTests.xctest"
+               BlueprintName = "FloatCueTests"
+               ReferencedContainer = "container:FloatCue.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -50,9 +50,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "B500"
-               BuildableName = "CueCardTests.xctest"
-               BlueprintName = "CueCardTests"
-               ReferencedContainer = "container:CueCard.xcodeproj">
+               BuildableName = "FloatCueTests.xctest"
+               BlueprintName = "FloatCueTests"
+               ReferencedContainer = "container:FloatCue.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "800"
-            BuildableName = "CueCard.app"
-            BlueprintName = "CueCard"
-            ReferencedContainer = "container:CueCard.xcodeproj">
+            BuildableName = "FloatCue.app"
+            BlueprintName = "FloatCue"
+            ReferencedContainer = "container:FloatCue.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -89,9 +89,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "800"
-            BuildableName = "CueCard.app"
-            BlueprintName = "CueCard"
-            ReferencedContainer = "container:CueCard.xcodeproj">
+            BuildableName = "FloatCue.app"
+            BlueprintName = "FloatCue"
+            ReferencedContainer = "container:FloatCue.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

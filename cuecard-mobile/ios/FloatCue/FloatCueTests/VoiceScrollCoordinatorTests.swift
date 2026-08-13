@@ -1,5 +1,5 @@
 import XCTest
-@testable import CueCard
+@testable import FloatCue
 
 final class VoiceScrollCoordinatorTests: XCTestCase {
     private let start = Date(timeIntervalSince1970: 10_000)

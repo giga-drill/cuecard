@@ -1,13 +1,13 @@
-# CueCard Mobile
+# FloatCue iOS
 
-CueCard Teleprompter keeps your speaker notes visible above any app, so you can stay on script without switching screens. Whether you’re recording a video, presenting, or speaking live, your notes flow with you wherever you go.
+FloatCue is the local-first iOS floating teleprompter built from the open-source CueCard mobile project. It keeps speaker notes visible in Picture in Picture while recording with Apple Camera.
 
 ## Bundle IDs
 
 | Platform | Bundle ID |
 |----------|-----------|
-| iOS fork | `com.gigadrill.cuecard` |
-| Android | `com.thisisnsh.cuecard.android` |
+| FloatCue iOS | `com.gigadrill.floatcue` |
+| Upstream Android | `com.thisisnsh.cuecard.android` |
 
 ## Firebase Setup
 
@@ -43,11 +43,11 @@ The iOS fork is local-first and no longer uses Firebase, Google Sign-In, Analyti
 
 ```bash
 # Open in Xcode
-open ios/CueCard/CueCard.xcodeproj
+open ios/FloatCue/FloatCue.xcodeproj
 
 # Or build from command line
-cd ios/CueCard
-xcodebuild -scheme CueCard -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
+cd ios/FloatCue
+xcodebuild -scheme FloatCue -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
 ```
 
 The iOS fork currently includes portrait/landscape PiP, Mandarin on-device voice following, local script alignment, smooth voice-driven scrolling, and automatic fallback to fixed-speed scrolling. Apple Camera microphone coexistence still requires the manual real-device checklist in [`../docs/real-device-test-checklist.md`](../docs/real-device-test-checklist.md).

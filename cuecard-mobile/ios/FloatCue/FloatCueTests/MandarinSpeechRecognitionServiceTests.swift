@@ -1,6 +1,6 @@
 import Speech
 import XCTest
-@testable import CueCard
+@testable import FloatCue
 
 final class MandarinSpeechRecognitionServiceTests: XCTestCase {
     func testLocaleIsFixedToMainlandMandarin() {
